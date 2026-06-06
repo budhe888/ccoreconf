@@ -92,18 +92,32 @@ CoreconfValueT *cborToCoreconfValue(nanocbor_value_t *value, unsigned indent) {
     int res = 0;
     switch (type) {
         case NANOCBOR_TYPE_UINT: {
-            uint64_t unsignedInteger = 0;
-            res = nanocbor_get_uint64(value, &unsignedInteger);
+            uint32_t unsignedInteger32 = 0;
+            res = nanocbor_get_uint32(value, &unsignedInteger32);
             if (res >= 0) {
-                coreconfValue = createCoreconfUint64(unsignedInteger);
+                coreconfValue = createCoreconfUint32(unsignedInteger32);
+            } else if (res == NANOCBOR_ERR_OVERFLOW) {
+                // we have a uint64
+                uint64_t unsignedInteger64 = 0;
+                res = nanocbor_get_uint64(value, &unsignedInteger64);
+                if (res >= 0) {
+                    coreconfValue = createCoreconfUint64(unsignedInteger64);
+                }
             }
         } break;
 
         case NANOCBOR_TYPE_NINT: {
-            int64_t nint = 0;
-            res = nanocbor_get_int64(value, &nint);
+            int32_t signedInteger32 = 0;
+            res = nanocbor_get_int32(value, &signedInteger32);
             if (res >= 0) {
-                coreconfValue = createCoreconfInt64(nint);
+                coreconfValue = createCoreconfInt32(signedInteger32);
+            } else if (res == NANOCBOR_ERR_OVERFLOW) {
+                // we have a uint64
+                int64_t signedInteger64 = 0;
+                res = nanocbor_get_int64(value, &signedInteger64);
+                if (res >= 0) {
+                    coreconfValue = createCoreconfInt64(signedInteger64);
+                }
             }
         } break;
         case NANOCBOR_TYPE_BSTR: {
@@ -232,7 +246,7 @@ int keyMappingHashMapToCBOR(struct hashmap *keyMappingHashMap, nanocbor_encoder_
 // Deserialize a CBOR buffer to a KeyMappingHashMap
 struct hashmap *cborToKeyMappingHashMap(nanocbor_value_t *value) {
     struct hashmap *keyMappingHashMap =
-        hashmap_new(sizeof(KeyMappingT), 0, 0, 0, keyMappingHash, keyMappingCompare, NULL, NULL);
+        hashmap_new(sizeof(KeyMappingT), 0, 0, 0, keyMappingHash, keyMappingCompare, keyMappingFree, NULL);
     nanocbor_value_t map;
     if (nanocbor_enter_map(value, &map) < NANOCBOR_OK) return NULL;
     int loopCounter = 0;
@@ -252,10 +266,18 @@ struct hashmap *cborToKeyMappingHashMap(nanocbor_value_t *value) {
         initializeDynamicLongList(keyMapping->dynamicLongList);
 
         nanocbor_value_t array;
-        if (nanocbor_enter_array(&map, &array) < NANOCBOR_OK) return NULL;
+        if (nanocbor_enter_array(&map, &array) < NANOCBOR_OK) {
+            freeDynamicLongList(keyMapping->dynamicLongList);
+            free(keyMapping);
+            return NULL;
+        }
         while (!nanocbor_at_end(&array)) {
             // Safety mechanism to avoid infinite loops
-            if (loopCounter > CORECONF_MAX_LOOP) return NULL;
+            if (loopCounter > CORECONF_MAX_LOOP) {
+                freeDynamicLongList(keyMapping->dynamicLongList);
+                free(keyMapping);
+                return NULL;
+            }
 
             uint64_t sidKey = 0;
             int res = nanocbor_get_uint64(&array, &sidKey);

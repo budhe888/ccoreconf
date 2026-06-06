@@ -1,3 +1,5 @@
+#ifndef CORECONF_MANIPULATION_H
+#define CORECONF_MANIPULATION_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +21,7 @@ typedef struct PathNode {
 
 int clookupCompare(const void *a, const void *b, void *udata);
 uint64_t clookupHash(const void *item, uint64_t seed0, uint64_t seed1);
+void clookupFree(void *item);
 void printCLookupHashmap(struct hashmap *clookupHashmap);
 
 void buildCLookupHashmapFromCoreconf(CoreconfValueT *coreconfValue, struct hashmap *clookupHashmap, int64_t parentSID,
@@ -31,3 +34,16 @@ void printPathNode(PathNodeT *pathNode);
 void freePathNode(PathNodeT *pathNode);
 PathNodeT *findRequirementForSID(uint64_t sid, struct hashmap *clookupHashmap, struct hashmap *keyMappingHashMap);
 CoreconfValueT *examineCoreconfValue(CoreconfValueT *coreconfValue, DynamicLongListT *requestKeys, PathNodeT *headNode);
+
+/**
+ * Navigate to parent container of a target SID using delta encoding and PathNode
+ * @param root Root of the coreconf model
+ * @param pathNode Path to navigate (built by findRequirementForSID)
+ * @param targetSID The final target SID
+ * @param finalDeltaSID Output parameter for the final delta SID from parent to target
+ * @return Pointer to parent container (hashmap), or NULL on error
+ */
+CoreconfValueT *navigateToParentContainer(CoreconfValueT *root, PathNodeT *pathNode, uint64_t targetSID,
+                                         uint64_t *finalDeltaSID);
+
+#endif // CORECONF_MANIPULATION_H

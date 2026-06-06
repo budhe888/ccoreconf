@@ -1,3 +1,6 @@
+#ifndef SID_H
+#define SID_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,7 +76,9 @@ typedef struct SIDModelStruct {
 DynamicLongListT *createDynamicLongList(void);
 void initializeDynamicLongList(DynamicLongListT *dynamicLongList);
 void addLong(DynamicLongListT *dynamicLongList, long value);
+long getLong(DynamicLongListT *dynamicLongList, bool removeFromList);
 long popLong(DynamicLongListT *dynamicLongList);
+long peekLong(DynamicLongListT *dynamicLongList);
 // Create a method to clone the Dynamiclist
 void cloneDynamicLongList(DynamicLongListT *originalDynamicLongList, DynamicLongListT *clonedDynamicLongList);
 // Create a method to sort the two lists
@@ -86,6 +91,7 @@ void printDynamicLongList(DynamicLongListT *dynamicLongList);
 
 uint64_t keyMappingHash(const void *item, uint64_t seed0, uint64_t seed1);
 int keyMappingCompare(const void *a, const void *b, void *udata);
+void keyMappingFree(void *item);
 
 int identifierSIDCompare(const void *a, const void *b, void *udata);
 uint64_t identifierSIDHash(const void *item, uint64_t seed0, uint64_t seed1);
@@ -106,3 +112,5 @@ void removeTrailingSlashFromPath(const char *qualifiedPath, char *formattedPath)
 int64_t char2int64(char *keyString);
 char *int2str(char *keyString, int64_t keyInt64);
 char *getSubstringAfterLastColon(const char *input);
+
+#endif // SID_H
