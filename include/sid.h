@@ -74,6 +74,7 @@ DynamicLongListT *createDynamicLongList(void);
 void initializeDynamicLongList(DynamicLongListT *dynamicLongList);
 void addLong(DynamicLongListT *dynamicLongList, long value);
 long popLong(DynamicLongListT *dynamicLongList);
+long peekLong(DynamicLongListT *dynamicLongList);
 // Create a method to clone the Dynamiclist
 void cloneDynamicLongList(DynamicLongListT *originalDynamicLongList, DynamicLongListT *clonedDynamicLongList);
 // Create a method to sort the two lists

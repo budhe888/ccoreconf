@@ -111,6 +111,17 @@ long popLong(DynamicLongListT *dynamicLongList) {
     return lastValue;
 }
 
+// TODO: Use a common routine with pop, but add an argument to remove
+// peek the last value from dynamicLongList, do not remove it
+long peekLong(DynamicLongListT *dynamicLongList) {
+    // If its NULL, then do nothing
+    if (!dynamicLongList) return 0;
+    // If the list is empty, then return -1
+    if (dynamicLongList->size == 0) return 0;
+    long lastValue = dynamicLongList->longList[dynamicLongList->size - 1];
+    return lastValue;
+}
+
 // Clone a DynamicLongListT
 void cloneDynamicLongList(DynamicLongListT *originalDynamicLongList, DynamicLongListT *clonedDynamicLongList) {
     // If its NULL, then do nothing
