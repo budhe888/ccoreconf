@@ -32,6 +32,14 @@ uint64_t clookupHash(const void *item, uint64_t seed0, uint64_t seed1) {
     return hashmap_murmur(&clookup->childSID, sizeof(uint64_t), seed0, seed1);
 }
 
+void clookupFree(void *item) {
+    CLookupT *clookup = (CLookupT *)item;
+    if (clookup && clookup->dynamicLongList) {
+        freeDynamicLongList(clookup->dynamicLongList);
+        clookup->dynamicLongList = NULL;
+    }
+}
+
 /**
  * Functions to Create Path Node used for traversing the coreconf model
  */
@@ -221,11 +229,16 @@ CoreconfValueT *examineCoreconfValue(CoreconfValueT *coreconfModel, DynamicLongL
                 // NOTE Why are we not freeing requestKeys?
                 // freeDynamicLongList(requestKeys);
                 cloneDynamicLongList(requestKeysClone, requestKeys);
+
+                // Cleanup before breaking
+                freeDynamicLongList(requestKeysClone);
+                freeDynamicLongList(sidKeyValueMatchDynamicLongList);
                 break;
             }
 
-            // Cleanup requestKeysClone
-            // freeDynamicLongList(requestKeysClone);
+            // Cleanup for each iteration
+            freeDynamicLongList(requestKeysClone);
+            freeDynamicLongList(sidKeyValueMatchDynamicLongList);
         }
     }
 

@@ -19,6 +19,7 @@ typedef struct PathNode {
 
 int clookupCompare(const void *a, const void *b, void *udata);
 uint64_t clookupHash(const void *item, uint64_t seed0, uint64_t seed1);
+void clookupFree(void *item);
 void printCLookupHashmap(struct hashmap *clookupHashmap);
 
 void buildCLookupHashmapFromCoreconf(CoreconfValueT *coreconfValue, struct hashmap *clookupHashmap, int64_t parentSID,
