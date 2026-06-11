@@ -134,6 +134,26 @@ int insertCoreconfHashMap(CoreconfHashMapT* map, uint64_t key, CoreconfValueT* v
                 return -1;
             }
             if (current->key == key) {
+                // If both existing and new values are hashmaps, recursively merge
+                if (current->value->type == CORECONF_HASHMAP && value->type == CORECONF_HASHMAP) {
+                    // Iterate through all entries in the update hashmap
+                    for (size_t j = 0; j < HASHMAP_TABLE_SIZE; j++) {
+                        CoreconfObjectT* updateEntry = value->data.map_value->table[j];
+                        while (updateEntry != NULL) {
+                            int result = insertCoreconfHashMap(current->value->data.map_value,
+                                                              updateEntry->key,
+                                                              updateEntry->value);
+                            if (result != 0) {
+                                free(coreconfObject_);
+                                return result;
+                            }
+                            updateEntry = updateEntry->next;
+                        }
+                    }
+                    free(coreconfObject_);
+                    return 0;
+                }
+                // Otherwise, replace the value
                 freeCoreconf(current->value, true);
                 current->value = value;
                 free(coreconfObject_);
@@ -291,6 +311,44 @@ void addToCoreconfArray(CoreconfValueT* arr, CoreconfValueT* value) {
         arr->data.array_value->elements[newSize - 1] = *value;
     }
     arr->data.array_value->size++;
+}
+
+// Search array for element with matching key, update if found, append if not
+// keySID and parentSID are used to calculate delta SID
+// Returns 0 on success, -1 on error
+int updateCoreconfArrayByKey(CoreconfValueT* arr, uint64_t keySID, uint64_t parentSID, uint64_t keyValue, CoreconfValueT* newValue) {
+    if (arr == NULL || arr->type != CORECONF_ARRAY || newValue == NULL) {
+        return -1;
+    }
+
+    // Calculate delta SID for key lookup
+    uint64_t deltaSID = keySID - parentSID;
+
+    // Search through array elements for one with matching key
+    for (size_t i = 0; i < arr->data.array_value->size; i++) {
+        CoreconfValueT* element = &arr->data.array_value->elements[i];
+
+        // Element must be a hashmap to contain keys
+        if (element->type != CORECONF_HASHMAP) {
+            continue;
+        }
+
+        // Check if this element has the key we're looking for (using delta SID)
+        CoreconfValueT* keyInElement = getCoreconfHashMap(element->data.map_value, deltaSID);
+        if (keyInElement != NULL) {
+            uint64_t elementKeyValue = getCoreconfValueAsUint64(keyInElement);
+            if (elementKeyValue == keyValue) {
+                // Found it - update this element
+                freeCoreconf(element, false);
+                *element = *newValue;
+                return 0;
+            }
+        }
+    }
+
+    // Key not found - append new element
+    addToCoreconfArray(arr, newValue);
+    return 0;
 }
 
 void freeCoreconf(CoreconfValueT* val, bool freeValue) {
