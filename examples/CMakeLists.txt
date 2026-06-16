@@ -12,6 +12,14 @@ target_link_libraries(demo_functionalities_coreconf
 # CoreConf types example
 add_executable(coreconf_types_example
     coreconf_types_example.c
+    ${ZCBOR_SRC}/zcbor_encode.c
+    ${ZCBOR_SRC}/zcbor_decode.c
+    ${ZCBOR_SRC}/zcbor_common.c
+)
+
+target_include_directories(coreconf_types_example
+  PUBLIC
+  ${ZCBOR_INCLUDE}
 )
 
 target_link_libraries(coreconf_types_example

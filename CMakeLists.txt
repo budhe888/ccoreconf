@@ -34,12 +34,28 @@ if(DEFINED ENV{NANOCBOR_BUILD} OR NANOCBOR_BUILD)
     link_directories(${NANOCBOR_BUILD})
 endif()
 
+# Find zcbor library
+# Users can specify ZCBOR_INCLUDE and ZCBOR_SRC via cmake -D flags
+if(DEFINED ENV{ZCBOR_INCLUDE} OR ZCBOR_INCLUDE)
+  if(NOT ZCBOR_INCLUDE)
+    set(ZCBOR_INCLUDE $ENV{ZCBOR_INCLUDE})
+  endif()
+  include_directories(${ZCBOR_INCLUDE})
+endif()
+
+if(DEFINED ENV{ZCBOR_SRC} OR ZCBOR_SRC)
+  if(NOT ZCBOR_SRC)
+    set(ZCBOR_SRC $ENV{ZCBOR_SRC})
+  endif()
+endif()
+
 # Library source files
 set(CCORECONF_SOURCES
     src/coreconfManipulation.c
     src/coreconfTypes.c
     src/hashmap.c
     src/serialization.c
+    src/zcborSerialization.c
     src/sid.c
 )
 
