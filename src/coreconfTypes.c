@@ -409,10 +409,28 @@ int updateCoreconfArrayByKey(CoreconfValueT* arr, uint64_t keySID, uint64_t pare
         if (keyInElement != NULL) {
             uint64_t elementKeyValue = getCoreconfValueAsUint64(keyInElement);
             if (elementKeyValue == keyValue) {
-                // Found it - update this element
-                freeCoreconf(element, false);
-                *element = *newValue;
-                return 0;
+                // Found it - merge the new hashmap into the existing element
+                // This preserves existing fields and only updates specified fields
+                if (element->type == CORECONF_HASHMAP && newValue->type == CORECONF_HASHMAP) {
+                    // Iterate through all entries in the new hashmap and merge them
+                    for (size_t j = 0; j < HASHMAP_TABLE_SIZE; j++) {
+                        CoreconfObjectT* updateEntry = newValue->data.map_value->table[j];
+                        while (updateEntry != NULL) {
+                            int result = insertCoreconfHashMap(element->data.map_value, updateEntry->key,
+                                                               updateEntry->value);
+                            if (result != 0) {
+                                return result;
+                            }
+                            updateEntry = updateEntry->next;
+                        }
+                    }
+                    return 0;
+                } else {
+                    // Not both hashmaps - fall back to replacement
+                    freeCoreconf(element, false);
+                    *element = *newValue;
+                    return 0;
+                }
             }
         }
     }
